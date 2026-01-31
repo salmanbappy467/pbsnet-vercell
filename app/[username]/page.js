@@ -1,23 +1,21 @@
 // app/[username]/page.js
 
-// আপনার ব্যাকএন্ডের URL (এটি প্রয়োজনে .env ফাইলে রাখবেন)
-const API_BASE_URL = "https://lost-darsey-sbinc2jkj-81fcaf06.koyeb.app/api"; // অথবা যেখানে আপনার সার্ভার হোস্ট করা
+// ✅ ফিক্স ১: URL থেকে শেষের '/api' বাদ দেওয়া হয়েছে
+const API_BASE_URL = "https://lost-darsey-sbinc2jkj-81fcaf06.koyeb.app"; 
 
-// ডাটা ফেচ করার ফাংশন
 async function getUserData(username) {
   try {
-    // আপনার pbsnet-server এর সার্চ API ব্যবহার করছি
+    // এখানে /api যোগ করা আছে, তাই উপরের ভেরিয়েবলে সেটা বাদ দিতে হবে
     const res = await fetch(`${API_BASE_URL}/api/users/search?username=${username}`, {
-      cache: 'no-store' // রিয়েল-টাইম ডাটার জন্য ক্যাশ বন্ধ রাখা হলো
+      cache: 'no-store'
     });
 
     if (!res.ok) return null;
-
     const data = await res.json();
     
-    // সার্চ রেজাল্ট যদি অ্যারে হয় এবং ডাটা থাকে
+    // ডাটা আছে কিনা চেক করা
     if (data && data.users && data.users.length > 0) {
-      return data.users[0]; // প্রথম ইউজারকে রিটার্ন করছি
+      return data.users[0];
     }
     return null;
   } catch (error) {
@@ -27,30 +25,30 @@ async function getUserData(username) {
 }
 
 export default async function UserProfile({ params }) {
-  // ১. URL থেকে username নেওয়া
-  const { username } = params;
+  // ✅ Next.js 15/16 ফিক্স: params কে await করা হয়েছে
+  const { username } = await params; 
 
-  // ২. API থেকে ডাটা আনা
   const user = await getUserData(username);
 
-  // ৩. যদি ইউজার না পাওয়া যায়
+  // যদি ইউজার না পাওয়া যায়
   if (!user) {
     return (
       <div style={styles.container}>
-        <h1>404</h1>
-        <p>User <strong>@{username}</strong> not found on pbsNet.</p>
-        <a href="/" style={styles.link}>Go Home</a>
+        <div style={styles.card}>
+            <h1 style={{color: 'red'}}>User Not Found</h1>
+            <p>Could not find user: <strong>@{username}</strong></p>
+            <a href="/" style={{color: 'blue', marginTop: '10px', display: 'block'}}>Go Home</a>
+        </div>
       </div>
     );
   }
 
-  // ৪. প্রোফাইল দেখানো (আপনার pbsnet-server এর ফিল্ড অনুযায়ী)
+  // প্রোফাইল দেখানো
   return (
     <div style={styles.container}>
         <div style={styles.card}>
-            {/* প্রোফাইল পিকচার (যদি থাকে) */}
             <div style={styles.avatarPlaceholder}>
-                {user.full_name.charAt(0).toUpperCase()}
+                {user.full_name?.charAt(0).toUpperCase() || '?'}
             </div>
             
             <h1 style={styles.name}>{user.full_name}</h1>
@@ -68,7 +66,6 @@ export default async function UserProfile({ params }) {
   );
 }
 
-// সাধারণ CSS স্টাইল (দ্রুত দেখার জন্য)
 const styles = {
   container: {
     display: 'flex',
@@ -86,7 +83,7 @@ const styles = {
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
     textAlign: 'center',
     maxWidth: '400px',
-    width: '100%'
+    width: '90%'
   },
   avatarPlaceholder: {
     width: '80px',
@@ -110,6 +107,5 @@ const styles = {
     borderRadius: '8px',
     marginBottom: '15px'
   },
-  contact: { fontWeight: 'bold', color: '#0070f3' },
-  link: { color: '#0070f3', textDecoration: 'underline' }
+  contact: { fontWeight: 'bold', color: '#0070f3' }
 };
